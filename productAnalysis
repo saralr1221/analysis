@@ -1,0 +1,91 @@
+# -*- coding: utf-8 -*-
+
+#srieck 02.26.2024
+
+#strip everything and create one varchar string, then get the unique product names from that list 
+#analyze the produce data, how much is in each system? How many duplicates? what % of data is classified 
+#work with Gunnar to create the table 
+# add manufacturer m 
+
+import pandas as pd
+import re
+import datetime
+
+
+
+##########################################
+########## Data is Deduped ###############
+# #df = pd.read_excel("classes1.xlsx", sheet_name='Sheet1')
+# df = pd.read_excel("raw_data.xlsx", sheet_name='Sheet1')
+
+# df = df.drop_duplicates()
+# print(df)
+
+# # df = df.iloc[: 10000]
+
+# df.to_excel("raw_dedup.xlsx", encoding='utf-8', index=False, engine='xlsxwriter')
+
+############################################
+#### Dedup rows where there is null in prod cat
+
+# df = pd.read_excel("raw_dedup.xlsx", sheet_name='Sheet1')
+
+# dedup_df = df[~(df[['system_name', 'ecats_scientific_name','ecats_common_name','elm_trade_name','elm_product_category', 'ffrm_product_category',
+#                         'ffrm_product_sub_category','cara_common_name','cara_product_category_subtype',
+#                         'cara_product_sub_category_var','lacf_product_category', 'lacf_product_sub_category',
+#                         'cap_common_name', 'cap_scientific_name', 'cap_product_category', 'dlm_admin_product_category',
+#                         'prod_name_clean']].duplicated(keep=False)) & (df.isnull().any(axis=1))]
+
+# print(dedup_df)
+# dedup_df.to_excel("raw_dedupnn.xlsx", encoding='utf-8', index=False, engine='xlsxwriter')
+
+############################################
+
+df = pd.read_excel("raw_dedup.xlsx", sheet_name='Sheet1')
+
+######### Find the % of categorized data #################
+
+df = df.sort_values(by=['system_name'])
+
+for v in df['system_name'].unique():
+    mask = df['system_name'] == v
+    print(df[mask])
+
+    null_count = df[mask].isnull().sum().sum()
+    print('Number of null values:', null_count)
+
+    counts = df[mask].isna().sum()
+    print('Null counts for ', v)
+    print(counts.sort_values())
+
+    percentages = round(df[mask].isna().mean() * 100, 3)
+    print('Percentage null for ', v)
+    print(percentages.sort_values())
+
+    totals = 100 - round(df[mask].isna().mean() * 100, 3)
+    print('Percentage not null for ', v)
+    print(totals.sort_values)
+
+#    null_values = pd.concat([counts, percentages, totals], axis=1, keys=["null count", "% null", "% categorized"])
+#    null_values.to_excel("sample.xlsx", encoding='utf-8', index=False, engine='xlsxwriter')
+    
+
+
+#################################################
+########### This counts how many times a product name is in different systems 
+
+# df = pd.read_excel("classes1.xlsx", sheet_name='Sheet1')
+
+
+new_df = df.groupby(['prod_name_clean'])['system_name'].nunique().reset_index()
+print(new_df)
+
+print(new_df['system_name'].value_counts())
+
+df2 = pd.merge(df, new_df, on='prod_name_clean', how='left')
+print(df2)
+
+print(df2['prod_name_clean'].nunique())
+
+
+df2.to_excel("new_prod_df.xlsx", encoding='utf-8', index=False, engine='xlsxwriter')
